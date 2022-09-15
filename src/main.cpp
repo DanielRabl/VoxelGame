@@ -3,12 +3,29 @@
 namespace graphic {
 	qgl::vertex_array<qgl::flag_default, qgl::primitive_quads<qgl::pos3, qgl::frgb>> va;
 }
+namespace world_gen {
+	qpl::perlin_noise noise;
+	qpl::perlin_noise noise_lightness;
+	qpl::perlin_noise noise_saturation;
+	qpl::perlin_noise noise_hue;
+
+	void init() {
+		noise.set_seed_random();
+		noise_lightness.set_seed_random();
+		noise_saturation.set_seed_random();
+		noise_hue.set_seed_random();
+	}
+
+	constexpr auto cube_size = 0.03;
+
+	constexpr qpl::size chunks_width = 8;
+}
 
 struct cube {
 	qpl::bitset<6> visible_sides;
 
-	cube() {
-		this->visible_sides.fill(true);
+	cube(bool b = true) {
+		this->visible_sides.fill(b);
 	}
 
 	constexpr bool bottom() const {
@@ -50,56 +67,76 @@ struct cube {
 	}
 
 	void fill_va(qpl::vector3i pos) {
+		
+		auto hue = world_gen::noise_hue.get(qpl::vec3d(pos).data, 0.01, 3);
+		auto color = qpl::frgb(qpl::get_rainbow_color(qpl::clamp_0_1(hue)));
+		auto lightness = (world_gen::noise_lightness.get(qpl::vec3d(pos).data, 0.008, 1) - 0.5) * 2;
+		auto saturation = (world_gen::noise_saturation.get(qpl::vec3d(pos).data, 0.005, 1) - 0.5) * 2;
+
 		if (this->bottom()) {
-			auto color = qpl::rgb::grey_shade(80);
-			graphic::va.add(qgl::make_vertex(pos + qpl::vec(0, 0, 0), color));
-			graphic::va.add(qgl::make_vertex(pos + qpl::vec(0, 0, 1), color));
-			graphic::va.add(qgl::make_vertex(pos + qpl::vec(1, 0, 1), color));
-			graphic::va.add(qgl::make_vertex(pos + qpl::vec(1, 0, 0), color));
+			auto color = qpl::frgb(qpl::get_rainbow_color(qpl::clamp_0_1(std::fmod(hue + 0.1, 1.0))));
+			color.light(lightness);
+			color.saturate(saturation);
+			color *= (80 / 255.0f);
+			graphic::va.add(qgl::make_vertex((pos + qpl::vec(0, 0, 0)) * world_gen::cube_size, color));
+			graphic::va.add(qgl::make_vertex((pos + qpl::vec(0, 0, 1)) * world_gen::cube_size, color));
+			graphic::va.add(qgl::make_vertex((pos + qpl::vec(1, 0, 1)) * world_gen::cube_size, color));
+			graphic::va.add(qgl::make_vertex((pos + qpl::vec(1, 0, 0)) * world_gen::cube_size, color));
 		}
 
 		if (this->left()) {
-			auto color = qpl::rgb::grey_shade(250);
-			color = qpl::rgb::magenta();
-			graphic::va.add(qgl::make_vertex(pos + qpl::vec(0, 1, 0), color));
-			graphic::va.add(qgl::make_vertex(pos + qpl::vec(0, 1, 1), color));
-			graphic::va.add(qgl::make_vertex(pos + qpl::vec(0, 0, 1), color));
-			graphic::va.add(qgl::make_vertex(pos + qpl::vec(0, 0, 0), color));
+			auto color = qpl::frgb(qpl::get_rainbow_color(qpl::clamp_0_1(std::fmod(hue + 0.9, 1.0))));
+			color.light(lightness);
+			color.saturate(saturation);
+			color *= (200 / 255.0f);
+			graphic::va.add(qgl::make_vertex((pos + qpl::vec(0, 1, 0)) * world_gen::cube_size, color));
+			graphic::va.add(qgl::make_vertex((pos + qpl::vec(0, 1, 1)) * world_gen::cube_size, color));
+			graphic::va.add(qgl::make_vertex((pos + qpl::vec(0, 0, 1)) * world_gen::cube_size, color));
+			graphic::va.add(qgl::make_vertex((pos + qpl::vec(0, 0, 0)) * world_gen::cube_size, color));
 		}
 
 		if (this->back()) {
-			auto color = qpl::rgb::grey_shade(210);
-			color = qpl::rgb::blue();
-			graphic::va.add(qgl::make_vertex(pos + qpl::vec(0, 0, 1), color));
-			graphic::va.add(qgl::make_vertex(pos + qpl::vec(0, 1, 1), color));
-			graphic::va.add(qgl::make_vertex(pos + qpl::vec(1, 1, 1), color));
-			graphic::va.add(qgl::make_vertex(pos + qpl::vec(1, 0, 1), color));
+			auto color = qpl::frgb(qpl::get_rainbow_color(qpl::clamp_0_1(std::fmod(hue + 0.95, 1.0))));
+			color.light(lightness);
+			color.saturate(saturation);
+			color *= (150 / 255.0f);
+			graphic::va.add(qgl::make_vertex((pos + qpl::vec(0, 0, 1)) * world_gen::cube_size, color));
+			graphic::va.add(qgl::make_vertex((pos + qpl::vec(0, 1, 1)) * world_gen::cube_size, color));
+			graphic::va.add(qgl::make_vertex((pos + qpl::vec(1, 1, 1)) * world_gen::cube_size, color));
+			graphic::va.add(qgl::make_vertex((pos + qpl::vec(1, 0, 1)) * world_gen::cube_size, color));
 		}
 
 		if (this->right()) {
-			auto color = qpl::rgb::grey_shade(120);
-			color = qpl::rgb::green();
-			graphic::va.add(qgl::make_vertex(pos + qpl::vec(1, 0, 0), color));
-			graphic::va.add(qgl::make_vertex(pos + qpl::vec(1, 0, 1), color));
-			graphic::va.add(qgl::make_vertex(pos + qpl::vec(1, 1, 1), color));
-			graphic::va.add(qgl::make_vertex(pos + qpl::vec(1, 1, 0), color));
+			auto color = qpl::frgb(qpl::get_rainbow_color(qpl::clamp_0_1(std::fmod(hue + 0.05, 1.0))));
+			color.light(lightness);
+			color.saturate(saturation);
+			color *= (50 / 255.0f);
+			graphic::va.add(qgl::make_vertex((pos + qpl::vec(1, 0, 0)) * world_gen::cube_size, color));
+			graphic::va.add(qgl::make_vertex((pos + qpl::vec(1, 0, 1)) * world_gen::cube_size, color));
+			graphic::va.add(qgl::make_vertex((pos + qpl::vec(1, 1, 1)) * world_gen::cube_size, color));
+			graphic::va.add(qgl::make_vertex((pos + qpl::vec(1, 1, 0)) * world_gen::cube_size, color));
 		}
 
 		if (this->front()) {
-			auto color = qpl::rgb::grey_shade(180);
-			color = qpl::rgb::red();
-			graphic::va.add(qgl::make_vertex(pos + qpl::vec(1, 0, 0), color));
-			graphic::va.add(qgl::make_vertex(pos + qpl::vec(1, 1, 0), color));
-			graphic::va.add(qgl::make_vertex(pos + qpl::vec(0, 1, 0), color));
-			graphic::va.add(qgl::make_vertex(pos + qpl::vec(0, 0, 0), color));
+			auto color = qpl::frgb(qpl::get_rainbow_color(qpl::clamp_0_1(std::fmod(hue + 0.02, 1.0))));
+			color.light(lightness);
+			color.saturate(saturation);
+			color *= (150 / 255.0f);
+			graphic::va.add(qgl::make_vertex((pos + qpl::vec(1, 0, 0)) * world_gen::cube_size, color));
+			graphic::va.add(qgl::make_vertex((pos + qpl::vec(1, 1, 0)) * world_gen::cube_size, color));
+			graphic::va.add(qgl::make_vertex((pos + qpl::vec(0, 1, 0)) * world_gen::cube_size, color));
+			graphic::va.add(qgl::make_vertex((pos + qpl::vec(0, 0, 0)) * world_gen::cube_size, color));
 		}
 
 		if (this->top()) {
-			auto color = qpl::rgb::grey_shade(250);
-			graphic::va.add(qgl::make_vertex(pos + qpl::vec(1, 1, 0), color));
-			graphic::va.add(qgl::make_vertex(pos + qpl::vec(1, 1, 1), color));
-			graphic::va.add(qgl::make_vertex(pos + qpl::vec(0, 1, 1), color));
-			graphic::va.add(qgl::make_vertex(pos + qpl::vec(0, 1, 0), color));
+			auto color = qpl::frgb(qpl::get_rainbow_color(qpl::clamp_0_1(std::fmod(hue + 0.98, 1.0))));
+			color.light(lightness);
+			color.saturate(saturation);
+			color *= (250 / 255.0f);
+			graphic::va.add(qgl::make_vertex((pos + qpl::vec(1, 1, 0)) * world_gen::cube_size, color));
+			graphic::va.add(qgl::make_vertex((pos + qpl::vec(1, 1, 1)) * world_gen::cube_size, color));
+			graphic::va.add(qgl::make_vertex((pos + qpl::vec(0, 1, 1)) * world_gen::cube_size, color));
+			graphic::va.add(qgl::make_vertex((pos + qpl::vec(0, 1, 0)) * world_gen::cube_size, color));
 		}
 	}
 
@@ -108,123 +145,160 @@ struct cube {
 	}
 };
 
-constexpr qpl::size chunk_size = 16;
+cube empty_cube(false);
+
+constexpr qpl::size chunk_size = 32;
 constexpr qpl::size chunk_blocks = qpl::pow(chunk_size, 3);
 
 struct chunk {
 	std::array<cube, chunk_blocks> cubes;
 	qpl::vector3i position;
 
+
 	constexpr static qpl::vector3<qpl::u8> to_vec3(qpl::size index) {
 		return qpl::vec(
-			qpl::u8_cast(index & 0xF),
-			qpl::u8_cast((index >> 4) & 0xF),
-			qpl::u8_cast((index >> 8) & 0xF)
+			qpl::u8_cast(index & (chunk_size - 1)),
+			qpl::u8_cast((index >> qpl::log2(chunk_size)) & (chunk_size - 1)),
+			qpl::u8_cast((index >> (qpl::log2(chunk_size) * 2)) & (chunk_size - 1))
 		);
 	}
 	constexpr static qpl::size from_vec3(qpl::vector3<qpl::u8> pos) {
-		return (qpl::size_cast(pos.data[0]) | (qpl::size_cast(pos.data[1]) << 4) | (qpl::size_cast(pos.data[2]) << 8));
+		return (qpl::size_cast(pos.data[0]) | (qpl::size_cast(pos.data[1]) << qpl::log2(chunk_size)) | (qpl::size_cast(pos.data[2]) << (qpl::log2(chunk_size) * 2)));
 	}
 
 	void fill() {
 		for (qpl::size i = 0u; i < chunk_blocks; ++i) {
-			if (qpl::random_b(0.95)) {
+
+			auto pos = qpl::vec3d(this->to_vec3(i)) + this->position * chunk_size;
+			//auto value = world_gen::noise.get(pos.data, 0.015, 1);
+			auto value = world_gen::noise.get(pos.data, 0.015, 3);
+
+			auto min = pos.min();
+			auto max = pos.max();
+			auto smallest_distance = (qpl::min(min, (world_gen::chunks_width * chunk_size - 1) - max) / (world_gen::chunks_width * chunk_size)) * 2;
+
+			//if (smallest_distance > 0.3) {
+			//	smallest_distance = 1.0;
+			//}
+
+			//auto border = 0.53 * smallest_distance;
+			auto border = smallest_distance;
+
+			if (value > border) {
 				this->cubes[i].visible_sides.fill(false);
 			}
 		}
 	}
 
-	constexpr auto& get(qpl::u8 x, qpl::u8 y, qpl::u8 z) {
-		return this->cubes[this->from_vec3(qpl::vec(x - 1, y, z))];
+	constexpr auto& get(qpl::i8 x, qpl::i8 y, qpl::i8 z) {
+		if (x < 0 || x >= chunk_size || y < 0 || y >= chunk_size || z < 0 || z >= chunk_size) {
+			return empty_cube;
+		}
+		else {
+			return this->cubes[this->from_vec3(qpl::vec(x, y, z))];
+		}
 	}
-	constexpr const auto& get(qpl::u8 x, qpl::u8 y, qpl::u8 z) const {
-		return this->cubes[this->from_vec3(qpl::vec(x - 1, y, z))];
-	}
-
-	void add_to_va() {
-		for (qpl::size i = 0u; i < chunk_blocks; ++i) {
-			auto pos = this->to_vec3(i);
-			this->cubes[i].fill_va(pos + this->position);
+	constexpr const auto& get(qpl::i8 x, qpl::i8 y, qpl::i8 z) const {
+		if (x < 0 || x >= chunk_size || y < 0 || y >= chunk_size || z < 0 || z >= chunk_size) {
+			return empty_cube;
+		}
+		else {
+			return this->cubes[this->from_vec3(qpl::vec(x, y, z))];
 		}
 	}
 
-	void check() {
-		qpl::size removed = 0u;
+	void add_to_va() {
+		//qpl::println("add_to_va ", this->position);
+		for (qpl::size i = 0u; i < chunk_blocks; ++i) {
+			auto pos = this->to_vec3(i);
+			this->cubes[i].fill_va(pos + this->position * chunk_size);
+		}
+	}
 
-		for (qpl::u8 z = 1; z < chunk_size - 1; ++z) {
-			for (qpl::u8 y = 1; y < chunk_size - 1; ++y) {
-				for (qpl::u8 x = 1; x < chunk_size - 1; ++x) {
+	void cleanup() {
+		for (qpl::i8 z = 0; z < chunk_size; ++z) {
+			for (qpl::i8 y = 0; y < chunk_size; ++y) {
+				for (qpl::i8 x = 0; x < chunk_size; ++x) {
 
-					if (qpl::get_time_signal(0.1)) {
-						qpl::println((int)x, " ", (int)y, " ", (int)z);
-					}
-
-					auto& check = this->get(x, y, z);
+					auto index = this->from_vec3(qpl::vec(x, y, z));
+					auto& check = this->cubes[index];
 					if (!check) {
 						continue;
 					}
 
-					auto& left   = this->get(x - 1, y, z);
-					auto& right  = this->get(x + 1, y, z);
-					auto& top    = this->get(x, y + 1, z);
+					auto& top = this->get(x, y + 1, z);
 					auto& bottom = this->get(x, y - 1, z);
-					auto& back   = this->get(x, y, z + 1);
-					auto& front  = this->get(x, y, z - 1);
+					auto& left = this->get(x - 1, y, z);
+					auto& right = this->get(x + 1, y, z);
+					auto& back = this->get(x, y, z + 1);
+					auto& front = this->get(x, y, z - 1);
 
-					if (check.left() && left.right()) {
+					if (check.left() && left) {
 						check.set_left(false);
 						left.set_right(false);
-						++removed;
 					}
-					if (check.right() && right.left()) {
+					if (check.right() && right) {
 						check.set_right(false);
 						right.set_left(false);
-						++removed;
 					}
-					if (check.front() && front.back()) {
+					if (check.front() && front) {
 						check.set_front(false);
 						front.set_back(false);
-						++removed;
 					}
-					if (check.back() && back.front()) {
+					if (check.back() && back) {
 						check.set_back(false);
 						back.set_front(false);
-						++removed;
 					}
-					if (check.top() && top.bottom()) {
+					if (check.top() && top) {
 						check.set_top(false);
 						top.set_bottom(false);
-						++removed;
 					}
-					if (check.bottom() && bottom.top()) {
+					if (check.bottom() && bottom) {
 						check.set_bottom(false);
 						bottom.set_top(false);
-						++removed;
 					}
 				}
 			}
 		}
-
-		qpl::println("Removed ", removed * 2, " edges!");
 	}
 };
 
 struct world {
 	std::unordered_map<qpl::vector3i, chunk> chunks;
+
+
 };
 
 struct voxel_state : qsf::base_state {
 
+	void create() {
+		world_gen::noise.set_seed_random();
+		graphic::va.clear();
+		this->world.chunks.clear();
+
+		constexpr qpl::size size = qpl::pow(world_gen::chunks_width, 3);
+		for (qpl::size i = 0u; i < size; ++i) {
+			auto pos = qpl::vec3i(qpl::base_array<3>(i, world_gen::chunks_width));
+
+			std::hash<qpl::vec3i> hash;
+			auto hash_value = hash(pos);
+
+			this->world.chunks[pos].position = pos;
+			this->world.chunks[pos].fill();
+			this->world.chunks[pos].cleanup();
+			this->world.chunks[pos].add_to_va();
+		}
+		graphic::va.update();
+	}
+
 	void init() override {
 		this->clear_color = qpl::rgb(30, 30, 40);
 
-		auto pos = qpl::vec(1, 1, 1);
+		this->set_active(true);
+		this->create();
+		this->set_active(false);
 
-		this->world.chunks[pos].fill();
-		this->world.chunks[pos].check();
-		this->world.chunks[pos].add_to_va();
 
-		qpl::println("size = ", graphic::va.size());
 	}
 	void updating() override {
 		this->camera_lock.update(this->camera, *this);
@@ -232,6 +306,9 @@ struct voxel_state : qsf::base_state {
 
 		if (this->event().key_single_pressed(sf::Keyboard::Escape)) {
 			this->pop_this_state();
+		}
+		if (this->event().key_single_pressed(sf::Keyboard::X)) {
+			this->create();
 		}
 	}
 
