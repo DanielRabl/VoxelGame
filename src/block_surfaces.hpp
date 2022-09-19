@@ -98,4 +98,12 @@ namespace table {
 		va.vertices.resize(size + range_size);
 		memcpy(va.vertices.data() + size, surfaces.data() + range_start, range_size * sizeof(vertex::vertex_type));
 	}
+	void add_to_va(qpl::u8 configuration) {
+		auto range_start = ranges[configuration].first;
+		auto range_size = ranges[configuration].second;
+
+		auto size = graphic::va.vertices.size();
+		graphic::va.vertices.resize(size + range_size);
+		memcpy(graphic::va.vertices.data() + size, surfaces.data() + range_start, range_size * sizeof(vertex::vertex_type));
+	}
 }

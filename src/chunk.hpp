@@ -10,7 +10,7 @@ struct chunk {
 	std::vector<chunk_index_type> indices;
 	qpl::vector3i position;
 	qpl::size visible_surfaces = 0u;
-	graphic::va_type va;
+	//graphic::va_type va;
 
 
 	bool empty() const {
@@ -66,18 +66,21 @@ struct chunk {
 	}
 
 	void update_vertices() {
-		this->va.vertices.reserve(this->visible_surfaces * 4);
-		this->va.clear();
-
-		for (auto& index : this->indices) {
-			this->blocks[index].fill_va(this->va, this->world_position(index));
-		}
+		//this->va.vertices.reserve(this->visible_surfaces * 4);
+		//this->va.clear();
+		//
+		//for (auto& index : this->indices) {
+		//	this->blocks[index].fill_va(this->va, this->world_position(index));
+		//}
 	}
 
 	void add_vertices() {
-		graphic::va.add(this->va);
-
+		//graphic::va.add(this->va);
+		for (auto& index : this->indices) {
+			this->blocks[index].fill_va(this->world_position(index));
+		}
 	}
+
 
 	void update_used_indices() {
 		this->visible_surfaces = 0u;

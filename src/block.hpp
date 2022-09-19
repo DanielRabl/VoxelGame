@@ -78,6 +78,22 @@ struct block {
 			graphic::va.vertices[i].color = (graphic::va.vertices[i].color * color) * (this->lightness / 255.f);
 		}
 	}
+	void fill_va(qpl::vector3i pos) {
+
+		qpl::f32 hue = std::fmod(world_gen::noise_hue.get(pos, 0.003f, 3) + 0.5f, 1.0f);
+		auto color = qpl::frgb(qpl::get_rainbow_color(hue)).grayified(0.5);
+
+		auto index = this->bits.data;
+
+		auto size = graphic::va.size();
+		//table::add_to_va(va, this->bits.data);
+		table::add_to_va(this->bits.data);
+
+		for (qpl::size i = size; i < graphic::va.vertices.size(); ++i) {
+			graphic::va.vertices[i].position = (pos + graphic::va.vertices[i].position) * world_gen::block_size;
+			graphic::va.vertices[i].color = (graphic::va.vertices[i].color * color) * (this->lightness / 255.f);
+		}
+	}
 
 	constexpr operator bool() const {
 		return qpl::bool_cast(this->bits.data);

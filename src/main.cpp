@@ -30,8 +30,8 @@ struct voxel_state : qsf::base_state {
 
 		qpl::benchmark("chunk :: borders()", [&]() { this->world.remove_chunk_border_surfaces(); });
 
-		//qpl::benchmark("light :: heights()", [&]() { this->world.create_light_height_values(); });
-		//qpl::benchmark("light :: apply()", [&]() { this->world.apply_lightness(); });
+		qpl::benchmark("light :: heights()", [&]() { this->world.create_light_height_values(); });
+		qpl::benchmark("light :: apply()", [&]() { this->world.apply_lightness(); });
 
 		auto total_sides = this->world.get_total_surface_count() * 4;
 		qpl::println("surfaces = ", this->world.get_total_surface_count());
@@ -125,7 +125,6 @@ struct voxel_state : qsf::base_state {
 void perlin_test() {
 
 	qpl::f64 sum = 0.0;
-
 	qpl::perlin_noise noise;
 
 	qpl::clock clock;
