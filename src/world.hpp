@@ -228,7 +228,7 @@ struct world {
 				qpl::i32 z = (i / chunk_size) + (chunk_xz.y * chunk_size);
 
 				this->light_height_values[chunk_xz][i] = 0;
-				for (qpl::i32 y = world_gen::world_size.y; y >= 0; --y) {
+				for (qpl::i32 y = qpl::i32_cast(world_gen::world_size.y); y >= 0; --y) {
 					auto pos = qpl::vec(x, y, z);
 
 
@@ -293,7 +293,7 @@ struct world {
 
 				auto distance = 1 - qpl::clamp_0_1(min_length / world_gen::light_distance);
 
-				block.lightness = 200 * distance + 55;
+				block.lightness = qpl::u8_cast(200 * distance + 55);
 			}
 			else {
 				block.lightness = 255;
